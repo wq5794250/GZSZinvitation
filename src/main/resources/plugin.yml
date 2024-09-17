@@ -1,0 +1,14 @@
+name: GZSZinvitation
+version: '${version}'
+main: org.hellogzsz.gzszinvitation.GZSZinvitation
+api-version: '1.20'
+commands:
+  invite:
+    description: 邀请一个指定玩家加入服务器
+    usage: /invite <Username>
+  whoinvited:
+    description: 查看指定玩家由谁邀请
+    usage: /whoinvited <Username>
+  ireload:
+      description: 重载GZSZ invitation插件
+      usage: /ireload
