@@ -10,6 +10,22 @@
 
 ### 示例配置文件
 ```
+# GZSZ Invitation插件由魔大可制作
+# 开源于https://github.com/wq5794250/GZSZinvitation
+bypass-invite:
+  enabled: true # 是否启用OP绕过功能，默认启用
+  message: "作为管理员，您已成功绕过邀请检测。" # 当OP绕过邀请检测时显示的消息
+
+invite-messages:
+  invite-success: "你已经成功邀请了 %player%。"
+  not-invited: "%player% 尚未被邀请！"
+  invited-by: "%player% 是由 %inviter% 邀请的！"
+  reload-message: "邀请记录已重新加载。"
+  kick-message: "您尚未被邀请加入此服务器。" # 踢出玩家时的提示消息
+```
+
+### 示例邀请记录文件
+```
   modakeWuPo: modakeWuPo 
   redmoon5428: modakeWuPo 
   <被邀请人>: <邀请人>
