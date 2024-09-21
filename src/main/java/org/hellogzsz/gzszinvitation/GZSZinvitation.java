@@ -21,7 +21,9 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
 
     private File dataFolder; // 数据文件夹
     private File inviteFile; // 邀请记录文件
-    private FileConfiguration inviteConfig; // 文件配置对象
+    private File configFile; // 配置文件
+    private FileConfiguration inviteConfig; // 邀请记录配置对象
+    private FileConfiguration config; // 主配置对象
 
     private Map<String, String> invitedPlayers = new HashMap<>(); // 存储已邀请玩家的数据
 
@@ -44,8 +46,17 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
             }
         }
 
+        // 初始化配置文件
+        this.configFile = new File(this.dataFolder, "config.yml");
+        if (!this.configFile.exists()) {
+            saveDefaultConfig(); // 如果配置文件不存在，则保存默认配置
+        }
+
         // 初始化邀请记录配置文件
         this.inviteConfig = YamlConfiguration.loadConfiguration(this.inviteFile);
+
+        // 初始化主配置文件
+        this.config = getConfig();
 
         // 加载现有的邀请记录
         loadInvitedPlayers();
@@ -97,7 +108,7 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
         @Override
         public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage("此命令只能由玩家执行!");
+                sender.sendMessage(config.getString("invite-messages.not-invited").replace("%player%", "未知玩家"));
                 return true;
             }
             Player player = (Player)sender;
@@ -109,12 +120,12 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
 
             String targetPlayerName = args[0];
             if (invitedPlayers.containsKey(targetPlayerName)) {
-                player.sendMessage(targetPlayerName + " 已经被邀请过了！");
+                player.sendMessage(config.getString("invite-messages.not-invited").replace("%player%", targetPlayerName));
                 return true;
             }
 
             invitedPlayers.put(targetPlayerName, player.getName());
-            player.sendMessage("你已经成功邀请了 " + targetPlayerName);
+            player.sendMessage(config.getString("invite-messages.invite-success").replace("%player%", targetPlayerName));
             return true;
         }
     }
@@ -133,22 +144,24 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
             String targetPlayerName = args[0];
             String inviter = invitedPlayers.get(targetPlayerName);
             if (inviter == null) {
-                sender.sendMessage(targetPlayerName + " 尚未被邀请！");
+                sender.sendMessage(config.getString("invite-messages.not-invited").replace("%player%", targetPlayerName));
             } else {
-                sender.sendMessage(targetPlayerName + " 是由 " + inviter + " 邀请的！");
+                sender.sendMessage(config.getString("invite-messages.invited-by")
+                        .replace("%player%", targetPlayerName)
+                        .replace("%inviter%", inviter));
             }
             return true;
         }
     }
 
     /**
-     * /reload 命令处理器
+     * /ireload 命令处理器
      */
     private class ReloadCommand implements CommandExecutor {
         @Override
         public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
             if (args.length > 0) {
-                sender.sendMessage("使用 /reload 即可，无需参数。");
+                sender.sendMessage("使用 /ireload 即可，无需参数。");
                 return false;
             }
 
@@ -161,7 +174,7 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
             // 再次加载邀请记录
             loadInvitedPlayers();
 
-            sender.sendMessage("邀请记录已重新加载。");
+            sender.sendMessage(config.getString("invite-messages.reload-message"));
             return true;
         }
     }
@@ -172,11 +185,18 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        // 检查玩家是否为OP
+        if (player.isOp()) {
+            if (config.getBoolean("bypass-invite.enabled")) {
+                player.sendMessage(config.getString("bypass-invite.message"));
+                return;
+            }
+        }
+
         if (!invitedPlayers.containsKey(player.getName())) {
             event.setJoinMessage(null); // 取消默认的加入消息
-            player.kickPlayer("您尚未被邀请加入此服务器。"); // 踢出玩家
-        } else {
-            player.sendMessage("欢迎 " + player.getName() + " 加入服务器！");
+            player.kickPlayer(config.getString("invite-messages.kick-message").replace("%player%", player.getName())); // 踢出玩家
         }
     }
 }
