@@ -107,25 +107,31 @@ public final class GZSZinvitation extends JavaPlugin implements Listener {
     private class InviteCommand implements CommandExecutor {
         @Override
         public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage(config.getString("invite-messages.not-invited").replace("%player%", "未知玩家"));
-                return true;
-            }
-            Player player = (Player)sender;
-
             if (args.length != 1) {
-                player.sendMessage("/invite <Username>");
+                sender.sendMessage("/invite <Username>");
                 return false;
             }
 
             String targetPlayerName = args[0];
-            if (invitedPlayers.containsKey(targetPlayerName)) {
-                player.sendMessage(config.getString("invite-messages.not-invited").replace("%player%", targetPlayerName));
-                return true;
-            }
 
-            invitedPlayers.put(targetPlayerName, player.getName());
-            player.sendMessage(config.getString("invite-messages.invite-success").replace("%player%", targetPlayerName));
+            if (sender instanceof Player) {
+                Player player = (Player)sender;
+                if (invitedPlayers.containsKey(targetPlayerName)) {
+                    sender.sendMessage(config.getString("invite-messages.already-invited").replace("%player%", targetPlayerName));
+                    return true;
+                }
+
+                invitedPlayers.put(targetPlayerName, player.getName());
+                player.sendMessage(config.getString("invite-messages.invite-success").replace("%player%", targetPlayerName));
+            } else { // 控制台发送命令的情况
+                if (invitedPlayers.containsKey(targetPlayerName)) {
+                    sender.sendMessage(config.getString("invite-messages.already-invited").replace("%player%", targetPlayerName));
+                    return true;
+                }
+
+                invitedPlayers.put(targetPlayerName, "Console");
+                sender.sendMessage(config.getString("invite-messages.invite-success-by-console").replace("%player%", targetPlayerName));
+            }
             return true;
         }
     }
